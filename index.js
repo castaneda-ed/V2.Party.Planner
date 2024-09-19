@@ -1,4 +1,4 @@
-const COHORT = "REPLACE_ME!";
+const COHORT = "EDWIN_CAS";
 const API = "https://fsa-crud-2aa9294fe819.herokuapp.com/api/" + COHORT;
 
 const state = {
@@ -52,6 +52,13 @@ function getEventFromHash() {
  */
 async function getGuests() {
   // TODO
+try {  
+  const response = await fetch(API + '/guests');
+  const json = await response.json();
+  state.guests = json.data;
+}catch (error) {
+  console.error(error)
+}
 }
 
 /**
@@ -60,9 +67,38 @@ async function getGuests() {
 function renderGuests() {
   $guests.hidden = false;
 
-  // TODO: Render the list of guests for the currently selected event
-  $guestList.innerHTML = "<li>No guests yet!</li>";
+  // Filter RSVPs to find guests for the current event
+  const rsvps = state.rsvps.filter((rsvp) => rsvp.eventId === state.event.id);
+  const guestIds = rsvps.map((rsvp) => rsvp.guestId);
+
+  // Filter guests whose ids match those in the RSVP list
+  const guests = state.guests.filter((guest) => guestIds.includes(guest.id)); // Use guest.id, not guest.ids
+
+  // If there are no guests, show a message
+  if (!guests.length) {
+    $guestList.innerHTML = "<li>No guests yet!</li>";
+    return;
+  }
+
+  // Otherwise, map each guest to an <li> element and display it
+  const guestList = guests.map((guest) => {
+    const guestInfo = document.createElement("li");
+    guestInfo.innerHTML = `
+      <span>${guest.name}</span>
+      <span>${guest.email}</span>
+      <span>${guest.phone}</span>
+    `;
+    return guestInfo;
+  });
+
+  // Replace existing guest list with the new one
+  $guestList.replaceChildren(...guestList);
 }
+
+
+  // TODO: Render the list of guests for the currently selected event
+  
+
 
 // === No need to edit anything below this line! ===
 
